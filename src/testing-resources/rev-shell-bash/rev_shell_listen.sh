@@ -1,3 +1,3 @@
 #!/bin/bash
 
-nc -lvp 4445
+nc -lv 4445
