@@ -1,0 +1,486 @@
+#!/usr/bin/env ruby
+
+require 'tty-prompt'
+require 'open3'
+require 'io/console'
+require 'readline'
+require_relative "prettyprint"
+require_relative "shellprocess"
+
+class Smoochbot
+
+  def initialize(shell_process_start_string)
+    @pp = PrettyPrint.new
+    @lwd = Dir.pwd
+    
+    @Prompts = {true => "#", false => "$"}
+    @root = false
+    @fd_arr = []
+    @remote_shell = ShellProcess.new(shell_process_start_string)
+    @remote = true
+    @local_shell
+    @golocalcmd
+    @goremotecmd
+    @scriptcmd
+    @hist_file
+    @tty_thr
+    @char_thr
+    @tty_stdin
+    @tty_reader
+    @replay_buffer
+    @tab = false
+    @tab_tty
+    @tab_tty_stdin
+    @fake_stdout_read_end
+    @tab_tty_thr
+    @history = []
+    @history_pos = 0
+    @cursor = 0
+    @buf_len = 0
+    @sent_from_tty = false
+    @last_arrow_key
+
+    #could use tty here to be fancy :)
+    load_config  
+    spawn_tty
+    load_history  
+    load_listeners
+    reset_replay_buffer
+  end
+
+  def beep
+    print "\u0007"
+  end
+
+  def clear_line
+    print "\r\e[J"
+  end
+
+  def tty
+    @tty
+  end
+
+  def reset_replay_buffer
+    @replay_buffer = []
+  end
+
+  def replay_buffer
+    @replay_buffer
+  end
+
+  def replay
+    @replay_buffer.each do |c|
+      @tty_stdin.write c
+    end
+  end
+
+  def refresh_prompt
+    #neat trick to refresh prompt
+    #sends ctrl-uparrow to the prompt
+    @tty_stdin.write "\e[1;5A"
+  end
+
+  def reset_cursor_and_history_pos
+    @history_pos = 0
+    @cursor = 0
+    @buf_len = 0
+  end
+
+  def shutdown
+    @pp.puts("\r\nGoodbye :)", :pink)
+    exit
+  end
+
+  def tab?
+    @tab
+  end
+
+  def tty_stdin
+    @tty_stdin
+  end
+
+  def tty_thr
+    @tty_thr 
+  end
+
+  def tty_thr=(thr)
+    @tty_thr = thr
+  end
+
+    def char_thr
+    @char_thr
+  end
+
+  def char_thr=(thr)
+    @char_thr = thr
+  end
+
+  def remote?
+    @remote
+  end
+
+  def local?
+    !@remote
+  end
+
+  def remote_shell
+    @remote_shell
+  end
+
+  def local_shell
+    @local_shell
+  end
+
+  def curr_shell
+    @remote ? @remote_shell : @local_shell
+  end
+
+  def root_check
+    #TODO implement a check for root
+    @root = false
+  end
+
+  def prompt
+    @pp.color(@Prompts[@root], :pink)
+  end
+
+  def listeners
+    @fd_arr
+  end
+
+  def add_to_history(line)
+    dupe = @history[1] == line
+    #p "#{@history[-1]} and #{line} are dupes?: #{dupe}"
+    @history[0] = line unless dupe
+    @history.unshift("") unless dupe
+    @hist_file.puts line unless dupe || line.nil? 
+  end
+
+  def tab_complete(input)
+    print  "tab completing on: "
+    p input
+  end
+
+  def process_input(input)
+    add_to_history input
+    reset_cursor_and_history_pos
+    case input
+    when @golocalcmd
+      #golocal
+      #explore using tty-command
+      @pp.puts("\rgoing local", :yellow)
+      @remote = false
+    when @goremotecmd
+      #goremote
+      @pp.puts("\rgoing remote", :yellow)
+      @remote = true
+    when /^#{Regexp.quote(@scriptcmd)}\s+(.+)\s+(\d+)$/
+      #script call with timeout
+      puts "\rscript timeout placeholder"
+    when /^#{Regexp.quote(@scriptcmd)}\s+(.+)\s*$/
+      #script call without timeout
+      puts "\rscript no timeout placeholder"
+    else
+      curr_shell.input(input)
+    end
+    reset_replay_buffer    
+  end
+
+  def process_output(stdio)
+    banner = curr_shell.listeners.include? stdio
+    output = stdio.read_nonblock(2**24) 
+    output.gsub!("\n","\r\n") unless output.nil?
+    #TODO output banner so the two shell outputs aren't confused
+    clear_line
+    case stdio
+    when @local_shell.stdout
+      #local shell stdout
+      @pp.print(output)
+    when @local_shell.stderr
+      #local shell stderr
+      @pp.print(output, :red) 
+    when @remote_shell.stdout
+      #remote shell stdout
+      @pp.print(output)
+    when @remote_shell.stderr
+      #remote shell stderr
+      @pp.print(output, :red) 
+    end
+    refresh_prompt
+  end
+
+  def load_config
+    filename = Dir.home + "/.smoochbot_config"
+    if File.exist?(filename) then
+      #existing config file, preferred shell is line 1
+      File.open(filename).each_line.with_index do |line,index|
+        line.chomp!
+        case index
+        when 0
+          #preferred local shell
+          @local_shell = ShellProcess.new(line)
+        when 1
+          #set golocal command
+          @golocalcmd = line
+        when 2
+          #set goremote
+          @goremotecmd = line
+        when 3
+          #set goremote
+          @scriptcmd = line
+        end
+      end
+    else
+      File.open(filename, "w") do |file|
+        @pp.puts("no input validation on this, you can edit this value in",
+                 :yellow
+                )
+        @pp.puts("#{filename}", :yellow)
+        @pp.puts("please enter the command to launch your shell of choice",
+                 :yellow
+                )
+        @pp.puts("hint: do not enter smoochbot ;)", :yellow) 
+        file.puts STDIN.gets
+        @pp.puts("enter the command to go to your local shell", :yellow)
+        file.puts STDIN.gets
+        @pp.puts("enter the command to go to your remote shell", :yellow)
+        file.puts STDIN.gets
+        @pp.puts("enter the command to run a script", :yellow)
+        file.puts STDIN.gets
+      end
+    end  
+  end
+
+  def load_history
+    filename = Dir.home + "/.smoochbot_history"
+    #load sentinal for pretty logic later with replay_buffer
+    if File.exist?(filename) then
+      #open history file, load into buffer
+      File.open(filename).each_line do |line|
+        @tty.reader.add_to_history(line.chomp)
+        @history.unshift(line.chomp)
+        #print "added cmd: " 
+        #p line.chomp
+      end
+      @hist_file = File.open(filename, "a")
+    else
+      #create history file
+      @hist_file = File.open(filename, "a")
+      @pp.puts(
+               "History file created at #{filename}",
+               :yellow
+              )
+    end
+    @history.unshift("")
+    @hist_file.sync = true
+  end
+
+  def load_listeners
+    @fd_arr = @remote_shell.listeners + @local_shell.listeners  
+  end
+
+  def spawn_tty
+    original_stdout = $stdout.clone
+    @fake_stdout_read_end, $stdout = IO.pipe
+    $stdin, @tab_tty_stdin = IO.pipe
+    @tab_tty = TTY::Prompt.new(track_history: false)
+    $stdout = original_stdout
+    $stdin, @tty_stdin = IO.pipe
+    @tty = TTY::Prompt.new
+    @tty.on(:keypress) do |event|
+      #p event.value
+      case event.value
+      when "\t"
+        @sent_from_tty = true
+        @tty_stdin.write "\u007F\e[1;5B"
+        #print "\n\rreplay buffer: "; p @replay_buffer
+        #puts "\rcursor: #{@cursor} buf_len: #{@buf_len}"; 
+        #replay to a tty to figure out what buf looks like
+        tab_tty_thr = Thread.new {@tab_tty.ask(prompt, echo: false)}
+        @replay_buffer.each do |c|
+          @tab_tty_stdin.write c
+        end
+        @tab_tty_stdin.write "\r"
+        tab_tty_thr.join
+        curr_buf = tab_tty_thr.value
+        if !curr_buf.nil? then
+          #this is where a tab completion module will hook in
+          #send it buffer and char, module should turn chars
+          #that need to be played to stdin at this point
+          #curr char is nil if at end of line
+          print "\n\rcurr char: #{curr_buf[@cursor + @buf_len]},"
+          puts "buf: #{curr_buf.inspect}"
+          #need to produce the correct options to tab process
+          #"ls * > /dev/null 2>&1; echo $?"
+          #@curr_shell
+        else
+          beep
+        end
+      when "\e[A"
+        #up arrow
+        if !@sent_from_tty then 
+          reset_replay_buffer
+          #sticky up down arrow fix
+          #could use break here to look better?
+          #if someone wanted to be a stickler, they could point out
+          #that if you tab and up or down arrow
+          if @history_pos != 0 then
+            fixes = ""
+            fixes += @last_arrow_key == "\e[A" ? "" : "\e[A"
+            fixes += "\e[1;5B"
+            @sent_from_tty = true
+            @tty_stdin.write fixes
+          end
+          @history_pos += 1 unless @history_pos == @history.size - 1
+          @last_arrow_key = "\e[A"
+        end
+        @replay_buffer = @history[@history_pos].chars
+        @buf_len = @history[@history_pos].size
+      when "\e[B"
+        #down arrow
+        if !@sent_from_tty then 
+          reset_replay_buffer
+          #sticky up down arrow fix
+          if @history_pos != @history.size - 1 then          
+            fixes = ""
+            fixes += @last_arrow_key == "\e[B" ? "" : "\e[B"
+            fixes += "\e[1;5B"
+            @sent_from_tty = true
+            @tty_stdin.write fixes
+          end
+          @last_arrow_key = "\e[B"
+          @history_pos -= 1 unless @history_pos == 0
+        end
+        @replay_buffer = @history[@history_pos].chars
+        @buf_len = @history[@history_pos].size
+      when "\e[C"
+        #right arrow
+        @cursor += 1 unless @cursor == 0
+        @replay_buffer << event.value
+      when "\e[D"
+        puts "left arrow"
+        #left arrow
+        @cursor -= 1 unless @buf_len == @cursor.abs
+        @replay_buffer << event.value
+      when "\u007F"
+        #backspace key
+        if !@sent_from_tty then
+          @buf_len -= 1 unless @buf_len == 0
+          @replay_buffer << event.value
+        end
+      when "\e[3~"
+        #delete key
+        @buf_len -= 1 unless @buf_len == 0 || @cursor == 0
+        @cursor += 1 unless @cursor == 0
+        @replay_buffer << event.value
+      when "\e[1;5B"
+        #sanity key, signals that fixes are done
+        @sent_from_tty = false
+      when "\e[1;5A"
+        #refreshes prompt key
+      when "\n", "\r", "\n\r"
+        #don't record
+      else
+        #add char to replay buffer
+        @buf_len += 1
+        @replay_buffer << event.value
+      end
+    end
+  end
+#Smoochbot
+end
+
+#add real args parsing TODO
+sb = Smoochbot.new("#{$ARGV[0]}")
+
+#TODO change sticky up and down keys on tty behavior
+#TODO add tab complete
+
+selectable = sb.listeners
+tty_reader, tty_writer = IO.pipe
+selectable << tty_reader
+sb.tty_thr = Thread.new {
+              tty_writer.puts sb.tty.ask(sb.prompt)
+              tty_writer.close
+             }
+char_reader, char_writer = IO.pipe
+sb.char_thr = Thread.new {
+                char_writer.print STDIN.getch
+                char_writer.close
+              }
+selectable << char_reader
+while true do 
+  begin
+    #blocking
+    ready = IO.select(selectable)
+  rescue IOError
+    #jumps in here when fd is closed, happens when pipe is closed
+    #TODO examine if this is really case
+    retry
+  end  
+
+  readable = ready[0]
+  readable.each do |stdio|
+    case stdio
+    when char_reader
+      c = stdio.read_nonblock(2**24)
+      c == "\u0003" ? sb.shutdown : sb.tty_stdin.write(c)
+      #restart char listener
+      sb.char_thr.join
+      selectable[5].close
+      char_reader, char_writer = IO.pipe
+      selectable[5] = char_reader
+      sb.char_thr = Thread.new {
+                      char_writer.print STDIN.getch
+                      char_writer.close
+                    }
+    when tty_reader      
+      begin
+        input = stdio.read_nonblock(2**24)
+        input.strip! unless input.nil?
+        sb.process_input(input)
+      rescue EOFError
+        #tty_reader has no output on double enter
+        #nothing for it to spit back but it terminates
+        #need to catch EOFError
+      end
+      #restart tty listener
+      sb.tty_thr.join
+      selectable[4].close
+      tty_reader, tty_writer = IO.pipe
+      selectable[4] = tty_reader
+      sb.tty_thr = Thread.new {
+                    tty_writer.print sb.tty.ask(sb.prompt) 
+                    tty_writer.close
+                   }
+      sb.refresh_prompt
+    else
+      #shell output
+      sb.process_output(stdio)
+    end
+  end
+end
+
+
+=begin
+Need to redo from a multithreading standpoint
+
+currently someone could get unintended input order by typing
+tab and any key before tab is passed to the tty thread
+with how slow io is, see this happening frequently if typing fast
+so it is nonnegligable
+
+can use delete and arrow key to solve problem with tab delete on 2nd
+to last character if that guy never fixes his bug
+
+could use mutex lock around tty_stdin as soon as tab is seen too but not
+elegant
+
+need to handle cursor and buffer length management for the insert key
+
+need to redesign, way i'm hooking in tab completion seems wrong
+=end
+
+
+
+

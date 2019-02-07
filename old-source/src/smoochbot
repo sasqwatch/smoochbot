@@ -1,0 +1,466 @@
+#!/usr/bin/env ruby
+
+require 'tty-prompt'
+require 'open3'
+require 'io/console'
+require 'readline'
+require_relative "prettyprint"
+require_relative "shellprocess"
+
+#saw on forum, experiment with pipes
+#f = open("|ls")
+#foo = f.read()
+
+class Smoochbot
+
+  def initialize(shell_process_start_string)
+    @pp = PrettyPrint.new
+    @lwd = Dir.pwd
+    puts @lwd
+    
+    @Prompts = {true => "#", false => "$"}
+    @root = false
+    @fd_arr = []
+    @remote_shell = ShellProcess.new(shell_process_start_string)
+    @remote = true
+    @local_shell
+    @golocalcmd
+    @goremotecmd
+    @scriptcmd
+    @hist_file
+    @tty_thr
+    @char_thr
+    @tty_stdin
+    @tty_reader
+    @replay_buffer
+    @tab = false
+    @tab_tty
+    @tab_tty_stdin
+    @fake_stdout_read_end
+    @tab_tty_thr
+    @history = []
+    @history_pos = 0
+    @cursor = 0
+    @buf_len = 0
+    @sent_from_tty = false
+    @last_arrow_key
+    @tty_mutex = Mutex.new
+
+    #could use tty here to be fancy :)
+    load_config  
+    spawn_tty
+    load_history  
+    load_listeners
+    reset_replay_buffer
+  end
+
+  def beep
+    print "\u0007"
+  end
+
+  def clear_line
+    print "\r\e[J"
+  end
+
+  def tty
+    @tty
+  end
+
+  def tty_mutex
+    @tty_stdin_mutex
+  end
+
+  def reset_replay_buffer
+    @replay_buffer = []
+  end
+
+  def replay_buffer
+    @replay_buffer
+  end
+
+  def replay
+    @replay_buffer.each do |c|
+      @tty_stdin.write c
+    end
+  end
+
+  def refresh_prompt
+    #neat trick to refresh prompt
+    #sends ctrl-uparrow to the prompt
+    @tty_stdin.write "\e[1;5A"
+  end
+
+  def reset_cursor_and_history_pos
+    @history_pos = 0
+    @cursor = 0
+    @buf_len = 0
+  end
+
+  def shutdown
+    @pp.puts("\r\nGoodbye :)", :pink)
+    exit
+  end
+
+  def tab?
+    @tab
+  end
+
+  def tty_stdin
+    @tty_stdin
+  end
+
+  def tty_thr
+    @tty_thr 
+  end
+
+  def tty_thr=(thr)
+    @tty_thr = thr
+  end
+
+    def char_thr
+    @char_thr
+  end
+
+  def char_thr=(thr)
+    @char_thr = thr
+  end
+
+  def remote?
+    @remote
+  end
+
+  def local?
+    !@remote
+  end
+
+  def remote_shell
+    @remote_shell
+  end
+
+  def local_shell
+    @local_shell
+  end
+
+  def curr_shell
+    @remote ? @remote_shell : @local_shell
+  end
+
+  def root_check
+    #TODO implement a check for root
+    @root = false
+  end
+
+  def prompt
+    @pp.color(@Prompts[@root], :pink)
+  end
+
+  def listeners
+    @fd_arr
+  end
+
+  def add_to_history(line)
+    dupe = @history[1] == line
+    #p "#{@history[-1]} and #{line} are dupes?: #{dupe}"
+    @history[0] = line unless dupe
+    @history.unshift("") unless dupe
+    @hist_file.puts line unless dupe || line.nil? 
+  end
+
+  def tab_complete(input)
+    print  "tab completing on: "
+    p input
+  end
+
+  def process_script(file, timeout = nil)
+    #TODO refactor this.
+    if timeout.nil? then
+      @pp.puts("No timeout means manual script stepping", :yellow)
+      @pp.puts("Script will step if output is received", :yellow)
+      @pp.puts("Press enter to step to the next command", :yellow)
+      @pp.puts("Type stop to stop script", :yellow)
+    elsif timeout == 0 then
+      @pp.puts("Timeout of 0 means all commands are run at once", :yellow)
+      @pp.puts("Output gets messy here", :yellow)
+      @pp.puts("Would recommend redirecting stdout and stderr", :yellow)
+      @pp.puts("in scripts you plan to run like this", :yellow)
+    end
+    #TODO implement better way to stop script
+    if File.exists?(file) then 
+      cmdbuf = ""
+      File.open(file).each do |line|
+        @pp.puts("\r#{line.chomp}", :pink) unless timeout.nil?
+        @pp.print("\r#{line.chomp}", :pink) if timeout.nil?
+        listeners = curr_shell.listeners
+        listeners << ($stdin) if timeout.nil?
+        curr_shell.input line unless timeout == 0
+        cmdbuf += line + "\n" if timeout == 0
+        ready = select(listeners, [], [], timeout)
+        if !ready.nil? then
+          readable = ready[0]
+          readable.each do |stdio|
+            if stdio == $stdin then
+              #consume enter key
+              stdio.read_nonblock(2**24)
+            else
+              #this is to keep cursor at end of line
+              #as if you typed commmand
+              print "\r" unless timeout.nil?
+              puts "\r" if timeout.nil?
+              process_output(stdio)
+            end
+          end
+        end
+      end
+      curr_shell.input cmdbuf if timeout == 0  
+    else
+      puts "usage: script file [timeout]"
+    end
+  end
+
+  def process_input(input)
+    add_to_history input
+    reset_cursor_and_history_pos
+    case input
+    when @golocalcmd
+      #golocal
+      #explore using tty-command
+      @pp.puts("\rgoing local", :yellow)
+      @remote = false
+    when @goremotecmd
+      #goremote
+      @pp.puts("\rgoing remote", :yellow)
+      @remote = true
+    when /^#{Regexp.quote(@scriptcmd)}\s+(.+)\s+(\d+)$/
+      #script call with timeout
+      matches = input.match(/^#{Regexp.quote(@scriptcmd)}\s+(.+)\s+(\d+)$/)
+      script_file = matches[1]
+      timeout = matches[2]
+      process_script script_file, timeout.to_i
+    when /^#{Regexp.quote(@scriptcmd)}\s+(.+)\s*$/
+      #script call without timeout
+      matches = input.match(/^#{Regexp.quote(@scriptcmd)}\s+(.+)\s*$/)
+      script_file = matches[1]
+      process_script script_file
+    else
+      curr_shell.input(input)
+    end
+    reset_replay_buffer    
+  end
+
+  def process_output(stdio)
+    banner = curr_shell.listeners.include? stdio
+    output = stdio.read_nonblock(2**24) 
+    output.gsub!("\n","\r\n") unless output.nil?
+    #TODO output banner so the two shell outputs aren't confused
+    clear_line
+    case stdio
+    when @local_shell.stdout
+      #local shell stdout
+      @pp.print(output)
+    when @local_shell.stderr
+      #local shell stderr
+      @pp.print(output, :red)
+    when @remote_shell.stdout
+      #remote shell stdout
+      @pp.print(output)
+    when @remote_shell.stderr
+      #remote shell stderr
+      @pp.print(output, :red)
+    end
+    refresh_prompt
+  end
+
+  def load_config
+    filename = Dir.home + "/.smoochbot_config"
+    if File.exist?(filename) then
+      #existing config file, preferred shell is line 1
+      File.open(filename).each_line.with_index do |line,index|
+        line.chomp!
+        case index
+        when 0
+          #preferred local shell
+          @local_shell = ShellProcess.new(line)
+        when 1
+          #set golocal command
+          @golocalcmd = line
+        when 2
+          #set goremote command
+          @goremotecmd = line
+        when 3
+          #set script command
+          @scriptcmd = line
+        end
+      end
+    else
+      File.open(filename, "w") do |file|
+        @pp.puts("no input validation on this, you can edit this value in",
+                 :yellow
+                )
+        @pp.puts("#{filename}", :yellow)
+        @pp.puts("please enter the command to launch your shell of choice",
+                 :yellow
+                )
+        @pp.puts("hint: do not enter smoochbot ;)", :yellow) 
+        file.puts STDIN.gets
+        @pp.puts("enter the command to go to your local shell", :yellow)
+        file.puts STDIN.gets
+        @pp.puts("enter the command to go to your remote shell", :yellow)
+        file.puts STDIN.gets
+        @pp.puts("enter the command to run a script", :yellow)
+        file.puts STDIN.gets
+      end
+    end  
+  end
+
+  def load_history
+    filename = Dir.home + "/.smoochbot_history"
+    #load sentinal for pretty logic later with replay_buffer
+    if File.exist?(filename) then
+      #open history file, load into buffer
+      File.open(filename).each_line do |line|
+        @tty.reader.add_to_history(line.chomp)
+        @history.unshift(line.chomp)
+        #print "added cmd: " 
+        #p line.chomp
+      end
+      @hist_file = File.open(filename, "a")
+    else
+      #create history file
+      @hist_file = File.open(filename, "a")
+      @pp.puts(
+               "History file created at #{filename}",
+               :yellow
+              )
+    end
+    @history.unshift("")
+    @hist_file.sync = true
+  end
+
+  def load_listeners
+    @fd_arr = @remote_shell.listeners + @local_shell.listeners  
+  end
+
+  def spawn_tty
+    original_stdin = $stdin.clone
+    original_stdout = $stdout.clone
+    @fake_stdout_read_end, $stdout = IO.pipe
+    $stdin, @tab_tty_stdin = IO.pipe
+    @tab_tty = TTY::Prompt.new(track_history: false)
+    $stdout = original_stdout
+    $stdin, @tty_stdin = IO.pipe
+    @tty = TTY::Prompt.new
+    $stdin = original_stdin
+    @tty.on(:keypress) do |event|
+      case event.value
+      when "\t"
+        tab_text, trailing = event.line.partition("\t")
+        tab_text = tab_text[tab_text.rindex(" ")..-1]
+        clear_line
+        @pp.puts("tab completion hook: #{tab_text}", :yellow)
+        #handle overwriting following text to next space
+      end
+    end
+  end
+#Smoochbot
+end
+
+#add real args parsing TODO
+sb = Smoochbot.new("#{$ARGV[0]}")
+
+#TODO change sticky up and down keys on tty behavior
+#TODO add tab complete
+
+selectable = sb.listeners
+tty_reader, tty_writer = IO.pipe
+selectable << tty_reader
+sb.tty_thr = Thread.new {
+              while true
+                Thread.stop
+                tty_writer.puts sb.tty.ask(sb.prompt)
+              end
+             }
+char_reader, char_writer = IO.pipe
+sb.char_thr = Thread.new {
+                reader = TTY::Reader.new(interrupt: lambda {})
+                c = ""
+                while c != "\u0003" do
+                  Thread.stop
+                  c = reader.read_char
+                  char_writer.print c
+                end
+              }
+selectable << char_reader
+#make sure both threads are reading
+select(nil,nil,nil,0.0001) until sb.tty_thr.stop?
+sb.tty_thr.run
+select(nil,nil,nil,0.0001) until sb.char_thr.stop?
+sb.char_thr.run
+while true do 
+  begin
+    #blocking
+    ready = select(selectable)
+  rescue IOError
+    #jumps in here when fd is closed, happens when pipe is closed
+    #TODO examine if this is really case
+    retry
+  end  
+
+  readable = ready[0]
+  readable.each do |stdio|
+    case stdio
+    when char_reader
+      c = stdio.read_nonblock(2**24)
+      case c
+      when "\u0003"
+        sb.shutdown
+      when "\t"
+        sb.tty_stdin.write("\t\u007f")
+      else
+        sb.tty_stdin.write(c)
+      end
+      select(nil,nil,nil,0.0001) until sb.char_thr.stop?
+      sb.char_thr.run unless ["\n", "\r", "\r\n", "\n\r"].include? c 
+    when tty_reader      
+      begin
+        input = stdio.read_nonblock(2**24)
+        input.strip! unless input.nil?
+        sb.process_input(input)
+        sb.char_thr.run
+        sleep(0.0001) until sb.tty_thr.stop?
+        sb.tty_thr.run
+      rescue EOFError
+        #tty_reader has no output on double enter
+        #nothing for it to spit back but it terminates
+        #need to catch EOFError
+      end
+      sb.refresh_prompt
+    else
+      #shell output
+      sb.process_output(stdio)
+    end
+  end
+end
+
+
+=begin
+Need to redo from a multithreading standpoint
+
+currently someone could get unintended input order by typing
+tab and any key before tab is passed to the tty thread
+with how slow io is, see this happening frequently if typing fast
+so it is nonnegligable
+
+can use delete and arrow key to solve problem with tab delete on 2nd
+to last character if that guy never fixes his bug
+
+could use mutex lock around tty_stdin as soon as tab is seen too but not
+elegant
+
+need to handle cursor and buffer length management for the insert key
+
+need to redesign, way i'm hooking in tab completion seems wrong
+=end
+
+
+
+

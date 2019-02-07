@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+require 'io/console'
+
+puts "reading char"
+c = $stdin.read
+puts "read it"
+puts c
