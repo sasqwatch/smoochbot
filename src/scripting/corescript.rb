@@ -1,29 +1,29 @@
+require 'optparse'
+
 class CoreScript
 
-  attr_reader :keyword, :command, :description, :regex,
-                                          :help_message
+  attr_reader :keyword, :description, :option_parser
   
-  def initialize(keyword, description, regex, 
-                                            help_message)
+  def initialize(keyword, description, option_parser)
     #keyword to invoke script
     @keyword = keyword
-    #commands to run
-    @command = "\n"
     #description of core script
     @description = description
-    #regex to verify command has correct input
-    @regex = regex
-    #message to display on incorrect input
-    #along with arg count/flags descriptions
-    @help_message = help_message
+    #OptionParser object created by script
+    @option_parser = option_parser
   end
 
   def inspect
-    "Command: #{@command}, Description #{@description}"
+    "Command: #{@keyword}, Description: #{@description}"
   end
 
-#  def run_script(options = "")
-#    raise "No run_script method defined" 
-#  end
+  def run_script(rest_of_line = nil)
+    raise NotImplementedError, "subclass did not define #run_script"
+  end
+
+  def parse(arg_arr)
+    #use option_parser to parse arguments
+    @option_parser.parse(arg_arr)
+  end
 #core script
 end
