@@ -1,6 +1,17 @@
 #!/usr/bin/env ruby
 
 require 'readline'
+require_relative "prettyprint"
+require_relative "shellprocess"
+
+
+pp = PrettyPrint.new
+
+#initialize shell
+#TODO
+#this needs to be passed as an arg, for now hardcoded
+remote_shell = ShellProcess.new("nc -l 4445", pp)
+#remote_shell = ShellProcess.new("bash", pp)
 
 #tab complete
 Readline.completion_proc = proc do |s|
@@ -12,16 +23,10 @@ Readline.completion_proc = proc do |s|
   end
 end
 
-#local priv level most basic check
-prompt = `whoami`.chomp == "root" ? "# " : "$ "
-
-#this is a blocking call
-while input = Readline.readline(prompt, true)
+while input = Readline.readline("$ ", true)
   break                       if input == "exit"
   puts Readline::HISTORY.to_a if input == "hist"
   # Remove blank lines from history
   Readline::HISTORY.pop if input == ""
-  #hangs here on sudo
-  system(input)
+  remote_shell.input(input)
 end
-
