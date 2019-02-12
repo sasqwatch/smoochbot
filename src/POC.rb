@@ -3,7 +3,7 @@
 require 'readline'
 
 #tab complete
-comp = proc do |s|
+Readline.completion_proc = proc do |s|
   directory_list = Dir.glob("#{s}*")
   if directory_list.size > 0
     directory_list
