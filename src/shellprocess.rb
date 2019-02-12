@@ -85,5 +85,19 @@ class ShellProcess
       end
     end
   end
+
+  def raw_input(input)
+    input = "echo \"#{@session_id}\";" + input + ";echo \"#{@session_id}\""
+    @stdin.puts input
+    output = ""
+    while output.scan(/#{@session_id}/).length != 2 do
+      readable = select(@outputs)[0]
+      readable.each do |stdio|
+        output += stdio.read_nonblock(2**24)
+      end
+    end
+    output.gsub!("#{@session_id}\n","") unless new_output.nil?
+    output
+  end
 #ShellProcess
 end

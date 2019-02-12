@@ -2,7 +2,7 @@ require_relative "corescript.rb"
 
 class Test < CoreScript
 
-  def initialize
+  def initialize(pretty_print)
     keyword = 'test'
     description = 'basic script to test core scripts!'
     @options = Hash.new
@@ -14,7 +14,7 @@ class Test < CoreScript
       #nicely formatted help message
       puts option_parser
     end
-    super(keyword, description, option_parser)
+    super(keyword, description, option_parser, pretty_print)
   end
 
   def run_script(rest_of_line = nil)
