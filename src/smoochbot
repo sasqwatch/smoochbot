@@ -1,10 +1,13 @@
 #!/usr/bin/env ruby
 
 require 'readline'
+require 'io/console'
 require_relative "prettyprint"
 require_relative "shellprocess"
-require_relative "scripting/startupscripts"
+require_relative "scripting/initializescripts"
 
+#TODO need to take care of a shell that recieves no error
+#and has no echo
 
 pp = PrettyPrint.new
 
@@ -12,14 +15,17 @@ pp = PrettyPrint.new
 #TODO
 #this needs to be passed as an arg, for now hardcoded
 remote_shell = ShellProcess.new("nc -l 4445", pp)
-
 #wait for connection
 remote_shell.verify_connection
 #identify prompt
 remote_shell.identify_shell_prompt
-
 #startup scripts to run on 
 startup_scripts = create_startup_scripts
+startup_scripts.each do |script|
+  script.run_script(remote_shell, pp)
+end
+#regular use scripts
+shell_scripts = create_shell_scripts
 
 #tab complete
 Readline.completion_proc = proc do |s|
@@ -34,6 +40,14 @@ end
 while input = Readline.readline("$ ", true)
   break                       if input == "exit"
   puts Readline::HISTORY.to_a if input == "hist"
+
+  first_word, rest_of_line = input.split(" ", 2)
+  #check for script keywords
+  shell_scripts.each do |script|
+    if first_word == script.keyword then
+      script.run_script(remote_shell, pp, rest_of_line) 
+    end
+  end
   # Remove blank lines from history
   Readline::HISTORY.pop       if input == ""
   remote_shell.input(input)   unless input.chomp == ""

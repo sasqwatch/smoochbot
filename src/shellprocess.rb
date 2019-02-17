@@ -10,9 +10,12 @@ class ShellProcess
                                                       )
     @pid = @wait_thr.pid
     @outputs = [@stdout, @stderr]
+    #TODO generate real session id
     @session_id = "012345"
     @pp = pretty_print
     @prompt = ""
+    @log_file = File.open("./shell_logs", "w")
+    @log_file.sync = true
   end
 
   def close
@@ -32,7 +35,7 @@ class ShellProcess
 
   def verify_connection
     #expects error to be spit out when command isn't found
-    @stdin.puts @session_id
+    @stdin.puts "#{@session_id} 2>&1"
     output = ""
     t = @pp.print_time_thread("Waiting for shell...")
     while output.scan(/#{@session_id}/).length != 1 do
@@ -52,16 +55,19 @@ class ShellProcess
     #expects error to be spit out when command isn't found
     @stdin.puts ""
     output = ""
-    @stdin.puts "#{@session_id}"
-    while output.scan(/#{@session_id}/).length != 1 do
+    @stdin.puts "#{@session_id} 2>&1"
+    while output.scan(@session_id).length != 1 do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
       end
     end
+    @log_file.puts "Identify shell prompt: #{output}"
     #confirm prompt
     error_line, @prompt = output.split("\n")
-    @prompt = nil unless @prompt == error_line[0..@prompt.length-1]
+    if !@prompt.nil? then 
+      @prompt = nil unless @prompt == error_line[0..@prompt.length-1]
+    end
     #at this point prompt will be either nil or the best guess  
     @pp.print_info("No shell prompt found\n") if @prompt.nil?
     @pp.print_info("Shell prompt found: #{@prompt}\n") unless @prompt.nil?
@@ -72,11 +78,13 @@ class ShellProcess
     input = "echo \"#{@session_id}\";" + input + ";echo \"#{@session_id}\""
     @stdin.puts input
     output = ""
-    while output.scan(/#{@session_id}/).length != 2 do
+    while output.scan(@session_id).length != 2 || 
+          (!@prompt.nil? && output.scan(@prompt).length != 1) do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         new_output = stdio.read_nonblock(2**24) 
         output += new_output
+        #expects echo output to be atomic in output
         new_output.gsub!("#{@session_id}\n","") unless new_output.nil?
         new_output.gsub!("\n","\r\n")           unless new_output.nil?
         new_output.gsub!(@prompt,"")            unless new_output.nil? || @prompt.nil?
@@ -84,19 +92,24 @@ class ShellProcess
         @pp.print(new_output, :red)             if stdio == @stderr
       end
     end
+    @log_file.puts "INPUT: #{input}: #{output}"
   end
 
   def raw_input(input)
     input = "echo \"#{@session_id}\";" + input + ";echo \"#{@session_id}\""
     @stdin.puts input
     output = ""
-    while output.scan(/#{@session_id}/).length != 2 do
+    while output.scan(@session_id).length != 2 || 
+          (!@prompt.nil? && output.scan(@prompt).length != 1) do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
       end
     end
-    output.gsub!("#{@session_id}\n","") unless new_output.nil?
+
+    @log_file.puts "INPUT_RAW: #{input}: #{output}"
+    output.gsub!(@prompt,"")
+    output.gsub!("#{@session_id}\n","")
     output
   end
 #ShellProcess

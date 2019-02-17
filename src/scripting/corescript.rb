@@ -17,7 +17,7 @@ class CoreScript
     "Command: #{@keyword}, Description: #{@description}"
   end
 
-  def run_script(rest_of_line = nil)
+  def run_script(shell, pp, rest_of_line = nil)
     raise NotImplementedError, "subclass did not define #run_script"
   end
 

@@ -17,7 +17,7 @@ class Test < CoreScript
     super(keyword, description, option_parser, pretty_print)
   end
 
-  def run_script(rest_of_line = nil)
+  def run_script(shell, pp, rest_of_line = nil)
     #run_script receives the trailing line
     #if this argument is nil, there was nothing
     #but whitespace following the keyword

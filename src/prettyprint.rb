@@ -9,6 +9,7 @@ class PrettyPrint
     @Colors[:red] = "\e[38;5;9m"
     @Colors[:green] = "\e[38;5;119m"
     @Colors[:blue] = "\e[38;5;39m"
+    @Colors[:orange] = "\e[38;5;208m"
     @Colors[:info_blue] = "\e[38;5;75m"
     @Colors[:file_red] = "\e[38;5;196m"
     @Colors[:default] = "\e[39m"
@@ -51,9 +52,20 @@ class PrettyPrint
     $stdout.print pre + string + @Colors[:default]
   end
 
-  def print_time_thread(string)
+  def print_warning(string)
+    pre = @Colors[:orange]
+    pre += "[!] " 
+    pre += @Colors[:default]
+    $stdout.print pre + string + @Colors[:default]
+  end
+
+  def clear_line
+    print "\033[2K"
+  end
+
+  def print_time_thread(string, time_piece = nil)
     Thread.new {
-      time_piece = nil
+      time_piece = time_piece
       while true do
         case time_piece
         when nil
