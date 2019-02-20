@@ -18,8 +18,9 @@ class FindLanguages < CoreScript
   def run_script(shell, pp, rest_of_line = nil)
     #MANDATORY
     #necessary for all scripts
-    arr_of_cmd_strings = ["find"]
-    return unless needed_commands(shell, pp, arr_of_cmd_strings)
+    #arr_of_cmd_strings = ["find"]
+    #return unless needed_commands(shell, pp, arr_of_cmd_strings)
+    return unless needed_commands(shell, pp)
     #/MANDATORY
 
     #debate is to use these methods over current methods
