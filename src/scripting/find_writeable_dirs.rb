@@ -102,6 +102,12 @@ class FindWriteableDirs < CoreScript
   end
 
   def run_script(shell, pp, rest_of_line = nil)
+    #MANDATORY
+    #necessary for all scripts
+    arr_of_cmd_strings = ["find"]
+    return unless which_commands(shell, pp, arr_of_cmd_strings) 
+    #/MANDATORY
+
     #TODO errorchecking, nil response for groups
     user = shell.raw_input("whoami").chomp
     #haven't tested behavior for no groups
@@ -122,9 +128,8 @@ class FindWriteableDirs < CoreScript
     dir_list = dir_list.flatten.uniq
     pp.print_success("Found #{dir_list.length} unique writeable directories\n") if dir_list.length > 1
     pp.print_success("Found #{dir_list.length} unique writeable directory\n") if dir_list.length == 1
-    #hopefully never :)
+    #hopefully never
     pp.print_error("Found #{dir_list.length} unique writeable directories\n") if dir_list.length == 0
-    
   end
 #FindWriteableDirs  
 end

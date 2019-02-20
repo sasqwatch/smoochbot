@@ -21,6 +21,17 @@ class CoreScript
     raise NotImplementedError, "subclass did not define #run_script"
   end
 
+  def which_commands(shell, pp, arr_of_cmd_strings = [])
+    arr_of_cmd_strings.each do |cmd_str|
+      output = shell.raw_input("which #{cmd_str}")
+      if output == "" then
+        pp.print_error("CMD: #{cmd_str} not found, aborting\n")
+        return false
+      end
+    end
+    true
+  end
+
   def parse(arg_arr)
     #use option_parser to parse arguments
     @option_parser.parse(arg_arr)

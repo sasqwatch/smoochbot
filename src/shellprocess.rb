@@ -55,7 +55,7 @@ class ShellProcess
     #expects error to be spit out when command isn't found
     @stdin.puts ""
     output = ""
-    @stdin.puts "#{@session_id} 2>&1"
+    @stdin.puts "echo #{@session_id}"
     while output.scan(@session_id).length != 1 do
       readable = select(@outputs)[0]
       readable.each do |stdio|
@@ -113,4 +113,4 @@ class ShellProcess
     output
   end
 #ShellProcess
-end
+end 
