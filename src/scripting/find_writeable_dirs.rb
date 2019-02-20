@@ -105,7 +105,7 @@ class FindWriteableDirs < CoreScript
     #MANDATORY
     #necessary for all scripts
     arr_of_cmd_strings = ["find"]
-    return unless which_commands(shell, pp, arr_of_cmd_strings) 
+    return unless needed_commands(shell, pp, arr_of_cmd_strings) 
     #/MANDATORY
 
     #TODO errorchecking, nil response for groups

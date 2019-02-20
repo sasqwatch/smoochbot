@@ -18,10 +18,9 @@ class FixPath < CoreScript
   def run_script(shell, pp, rest_of_line = nil)
     #MANDATORY
     #necessary for all scripts
-    return unless which_commands(shell, pp) 
+    return unless needed_commands(shell, pp) 
     #/MANDATORY
 
-    which_commands(shell, pp)
     path = ""
     path += "/usr/local/bin"
     path += ":"

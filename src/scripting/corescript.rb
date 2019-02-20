@@ -21,7 +21,7 @@ class CoreScript
     raise NotImplementedError, "subclass did not define #run_script"
   end
 
-  def which_commands(shell, pp, arr_of_cmd_strings = [])
+  def needed_commands(shell, pp, arr_of_cmd_strings = [])
     arr_of_cmd_strings.each do |cmd_str|
       output = shell.raw_input("which #{cmd_str}")
       if output == "" then

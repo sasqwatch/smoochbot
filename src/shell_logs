@@ -10,6 +10,23 @@ INPUT_RAW: echo "012345";which find;echo "012345": 012345
 /usr/bin/find
 012345
 bash-3.2$ 
-INPUT_RAW: echo "012345";which notreal;echo "012345": 012345
+INPUT_RAW: echo "012345";which perl;echo "012345": 012345
+/usr/bin/perl
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which python;echo "012345": 012345
+/usr/bin/python
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which ruby;echo "012345": 012345
+/usr/bin/ruby
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which gcc;echo "012345": 012345
+/usr/bin/gcc
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which cc;echo "012345": 012345
+/usr/bin/cc
 012345
 bash-3.2$ 
