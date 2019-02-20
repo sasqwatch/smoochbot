@@ -1,13 +1,13 @@
 Identify shell prompt: bash-3.2$ 012345
 bash-3.2$ 
-INPUT_RAW: echo "012345";export $PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin;echo "012345": 012345
-bash: export: `/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware': not a valid identifier
-bash: export: `Fusion.app/Contents/Public:/opt/X11/bin=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware': not a valid identifier
-bash: export: `Fusion.app/Contents/Public:/opt/X11/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin': not a valid identifier
+INPUT_RAW: echo "012345";export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin;echo "012345": 012345
 012345
 bash-3.2$ 
 INPUT_RAW: echo "012345";which find;echo "012345": 012345
 /usr/bin/find
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which tOtAllYn0t4R34lCMD;echo "012345": 012345
 012345
 bash-3.2$ 
 INPUT_RAW: echo "012345";which perl;echo "012345": 012345
@@ -30,20 +30,33 @@ INPUT_RAW: echo "012345";which cc;echo "012345": 012345
 /usr/bin/cc
 012345
 bash-3.2$ 
-INPUT: echo "012345";export $PATH=$PATH:test;echo "012345": 012345
-bash: export: `/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware': not a valid identifier
-bash: export: `Fusion.app/Contents/Public:/opt/X11/bin=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware': not a valid identifier
-bash: export: `Fusion.app/Contents/Public:/opt/X11/bin:test': not a valid identifier
+INPUT_RAW: echo "012345";which find;echo "012345": 012345
+/usr/bin/find
 012345
 bash-3.2$ 
-INPUT: echo "012345";export "$PATH=$PATH:test";echo "012345": 012345
-bash: export: `/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin:test': not a valid identifier
+INPUT_RAW: echo "012345";which tOtAllYn0t4R34lT00L;echo "012345": 012345
 012345
 bash-3.2$ 
-INPUT: echo "012345";export PATH=$PATH:test;echo "012345": 012345
+INPUT_RAW: echo "012345";which nc;echo "012345": 012345
+/usr/bin/nc
 012345
 bash-3.2$ 
-INPUT: echo "012345";echo $PATH;echo "012345": 012345
-/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin:test
+INPUT_RAW: echo "012345";which wget;echo "012345": 012345
+/usr/local/bin/wget
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which fetch;echo "012345": 012345
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";which find;echo "012345": 012345
+/usr/bin/find
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";whoami;echo "012345": 012345
+jeff
+012345
+bash-3.2$ 
+INPUT_RAW: echo "012345";groups;echo "012345": 012345
+staff everyone localaccounts _appserverusr admin _appserveradm _lpadmin com.apple.sharepoint.group.1 _appstore _lpoperator _developer _analyticsusers com.apple.access_ftp com.apple.access_screensharing com.apple.access_ssh-disabled
 012345
 bash-3.2$ 
