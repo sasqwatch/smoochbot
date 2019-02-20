@@ -35,7 +35,8 @@ class FixPath < CoreScript
     path += "/opt/local/bin"
     #shouldn't mess with anything, at worse adds a dir
     #that aready exists in path or one that doesn't exist
-    shell.raw_input("export $PATH=$PATH:#{path}")
+    puts "changing path"
+    shell.raw_input("export PATH=$PATH:#{path}")
     pp.print_info("Added common directories to $PATH\n")
 
   end

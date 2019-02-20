@@ -30,3 +30,20 @@ INPUT_RAW: echo "012345";which cc;echo "012345": 012345
 /usr/bin/cc
 012345
 bash-3.2$ 
+INPUT: echo "012345";export $PATH=$PATH:test;echo "012345": 012345
+bash: export: `/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware': not a valid identifier
+bash: export: `Fusion.app/Contents/Public:/opt/X11/bin=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware': not a valid identifier
+bash: export: `Fusion.app/Contents/Public:/opt/X11/bin:test': not a valid identifier
+012345
+bash-3.2$ 
+INPUT: echo "012345";export "$PATH=$PATH:test";echo "012345": 012345
+bash: export: `/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin:test': not a valid identifier
+012345
+bash-3.2$ 
+INPUT: echo "012345";export PATH=$PATH:test;echo "012345": 012345
+012345
+bash-3.2$ 
+INPUT: echo "012345";echo $PATH;echo "012345": 012345
+/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin:/usr/local/share/keepnote-0.7.8/bin/:/Users/jeff/Documents/smoochbot-private/src/:/Users/jeff/Documents/local-use-scripts:/opt/metasploit-framework/bin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin:test
+012345
+bash-3.2$ 
