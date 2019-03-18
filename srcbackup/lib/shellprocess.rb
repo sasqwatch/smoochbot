@@ -14,7 +14,7 @@ class ShellProcess
     @session_id = "012345"
     @pp = pretty_print
     @prompt = ""
-    @log_file = File.open("./shell_logs", "w")
+    @log_file = File.open("./.shell_logs", "w")
     @log_file.sync = true
   end
 
@@ -48,7 +48,7 @@ class ShellProcess
     #shell is listening
     t.kill
     puts ""
-    @pp.print_success("Recieved a connection\n")
+    @pp.print_success("Received a connection\n")
   end
 
   def identify_shell_prompt
@@ -75,11 +75,17 @@ class ShellProcess
   end
 
   def input(input)
-    input = "echo \"#{@session_id}\";" + input + ";echo \"#{@session_id}\""
+    #TODO explore using this command to wrap
+    #echo hi; echo middle &; echo hi; fg 2>/dev/null; echo hi;
+    input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
+    @log_file.print "INPUT: #{input}: "
     @stdin.puts input
     output = ""
+    #this while loop is waiting for the echos to resolve, and then
+    #waits for the prompt to come in so it can chomp it
+    #split this into two loops
     while output.scan(@session_id).length != 2 || 
-          (!@prompt.nil? && output.scan(@prompt).length != 1) do
+          (!@prompt.nil? && output.scan(@prompt).length != 3) do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         new_output = stdio.read_nonblock(2**24) 
@@ -91,23 +97,55 @@ class ShellProcess
         @pp.print(new_output)                   if stdio == @stdout
         @pp.print(new_output, :red)             if stdio == @stderr
       end
+      puts "session id count: #{output.scan(@session_id).length}"
+      p output
     end
-    @log_file.puts "INPUT: #{input}: #{output}"
+    @log_file.puts "#{output}"
   end
 
+  def blocking_input(input)
+    #TODO explore using this command to wrap
+    #echo hi; echo middle &; echo hi; fg 2>/dev/null; echo hi;
+    input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
+    @log_file.print "INPUT: #{input}: "
+    @stdin.puts input
+    output = ""
+    #this while loop is waiting for the echos to resolve, and then
+    #waits for the prompt to come in so it can chomp it
+    #split this into two loops
+    while output.scan(@session_id).length != 2 || 
+          (!@prompt.nil? && output.scan(@prompt).length != 3) do
+      readable = select(@outputs)[0]
+      readable.each do |stdio|
+        new_output = stdio.read_nonblock(2**24) 
+        output += new_output
+        #expects echo output to be atomic in output
+        new_output.gsub!("#{@session_id}\n","") unless new_output.nil?
+        new_output.gsub!("\n","\r\n")           unless new_output.nil?
+        new_output.gsub!(@prompt,"")            unless new_output.nil? || @prompt.nil?
+        @pp.print(new_output)                   if stdio == @stdout
+        @pp.print(new_output, :red)             if stdio == @stderr
+      end
+      puts "session id count: #{output.scan(@session_id).length}"
+      p output
+    end
+    @log_file.puts "#{output}"
+  end
+
+
   def raw_input(input)
-    input = "echo \"#{@session_id}\";" + input + ";echo \"#{@session_id}\""
+    input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
+    @log_file.print "RAW_INPUT: #{input}: "
     @stdin.puts input
     output = ""
     while output.scan(@session_id).length != 2 || 
-          (!@prompt.nil? && output.scan(@prompt).length != 1) do
+          (!@prompt.nil? && output.scan(@prompt).length != 3) do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
       end
     end
-
-    @log_file.puts "INPUT_RAW: #{input}: #{output}"
+    @log_file.puts "#{output}"
     output.gsub!(@prompt,"")
     output.gsub!("#{@session_id}\n","")
     output

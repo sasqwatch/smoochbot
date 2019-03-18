@@ -22,10 +22,9 @@ class CoreScript
   end
 
   def needed_commands(shell, pp, arr_of_cmd_strings = [])
-    #assumes availability of which, should first run find
-    not_found = shell.blocking_raw_input("which tOtAllYn0t4R34lCMD").gsub("tOtAllYn0t4R34lCMD","")
+    not_found = shell.raw_input("which tOtAllYn0t4R34lCMD").gsub("tOtAllYn0t4R34lCMD","")
     arr_of_cmd_strings.each do |cmd_str|
-      output = shell.blocking_raw_input("which #{cmd_str}").gsub("#{cmd_str}","")
+      output = shell.raw_input("which #{cmd_str}")
       if output == not_found then
         pp.print_error("CMD: #{cmd_str} not found, aborting\n")
         return false

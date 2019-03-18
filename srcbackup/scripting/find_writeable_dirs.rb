@@ -44,7 +44,7 @@ class FindWriteableDirs < CoreScript
     t = pp.print_time_thread("Finding dirs writeable by User: #{user}")
     cmd =  "find / \'(\' -type d \')\'"
     cmd += " \'(\' -user #{user} -perm -u=w \')\' 2>/dev/null"
-    dir_list_str = shell.blocking_raw_input(cmd)
+    dir_list_str = shell.raw_input(cmd)
     sep = dir_list_str[-2..-1] == "\r\n" ? "\r\n" : "\n"
     dir_list << dir_list_str.chomp("#{sep}").split("#{sep}").uniq
     t.kill
@@ -65,7 +65,7 @@ class FindWriteableDirs < CoreScript
       t = pp.print_time_thread("group #{i+1}/#{groups.split(" ").length}...")
       cmd =  "find / \'(\' -type d \')\'"
       cmd += " \'(\' -group #{group} -perm -g=w \')\'"
-      dir_list_str = shell.blocking_raw_input(cmd)
+      dir_list_str = shell.raw_input(cmd)
       sep = dir_list_str[-2..-1] == "\r\n" ? "\r\n" : "\n"
       #99% sure unique not needed
       group_dir_list = dir_list_str.chomp("#{sep}").split("#{sep}").uniq
@@ -88,7 +88,7 @@ class FindWriteableDirs < CoreScript
     t = pp.print_time_thread("Finding world writeable dirs")
     cmd =  "find / \'(\' -type d \')\'"
     cmd += " \'(\' -perm -o=w \')\' 2>/dev/null"
-    dir_list_str = shell.blocking_raw_input(cmd)
+    dir_list_str = shell.raw_input(cmd)
     sep = dir_list_str[-2..-1] == "\r\n" ? "\r\n" : "\n"
     dir_list << dir_list_str.chomp("#{sep}").split("#{sep}").uniq
     t.kill
@@ -109,10 +109,10 @@ class FindWriteableDirs < CoreScript
     #/MANDATORY
 
     #TODO errorchecking, nil response for groups
-    user = shell.blocking_raw_input("whoami").chomp
+    user = shell.raw_input("whoami").chomp
     #haven't tested behavior for no groups
     #does a unix user need to have a group?
-    all_groups =  shell.blocking_raw_input("groups").chomp
+    all_groups =  shell.raw_input("groups").chomp
     pp.print_info("Searching for writeable directories\n")
     pp.print_info("This could take a while...\n")
 

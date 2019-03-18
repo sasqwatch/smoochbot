@@ -1,0 +1,85 @@
+Identify shell prompt: bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which tOtAllYn0t4R34lCMD
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which tOtAllYn0t4R34lCMD
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which tOtAllYn0t4R34lCMD
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which perl
+echo "012345": 012345
+bash-3.2$ /usr/bin/perl
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which python
+echo "012345": 012345
+bash-3.2$ /usr/bin/python
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which ruby
+echo "012345": 012345
+bash-3.2$ /usr/bin/ruby
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which gcc
+echo "012345": 012345
+bash-3.2$ /usr/bin/gcc
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which cc
+echo "012345": 012345
+bash-3.2$ /usr/bin/cc
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which tOtAllYn0t4R34lCMD
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which tOtAllYn0t4R34lT00L
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which nc
+echo "012345": 012345
+bash-3.2$ /usr/bin/nc
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which wget
+echo "012345": 012345
+bash-3.2$ /usr/local/bin/wget
+bash-3.2$ 012345
+bash-3.2$ 
+RAW_INPUT: echo "012345"
+which fetch
+echo "012345": 012345
+bash-3.2$ bash-3.2$ 012345
+bash-3.2$ 
+INPUT: echo "012345"
+a,s d
+echo "012345": 012345
+bash-3.2$ bash: a,s: command not found
+bash-3.2$ 012345
+bash-3.2$ 

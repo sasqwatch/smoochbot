@@ -18,9 +18,8 @@ class FindTools < CoreScript
   def run_script(shell, pp, rest_of_line = nil)
     #MANDATORY
     #necessary for all scripts
-    #arr_of_cmd_strings = ["find"]
-    #return unless needed_commands(shell, pp, arr_of_cmd_strings)
-    return unless needed_commands(shell, pp)
+    arr_of_cmd_strings = ["which"]
+    return unless needed_commands(shell, pp, arr_of_cmd_strings)
     #/MANDATORY
 
     #debate is to use these methods over current methods
@@ -43,9 +42,9 @@ class FindTools < CoreScript
     #TODO
     #if this exists god help you.
     #replace with session ID later
-    not_found = shell.raw_input("which tOtAllYn0t4R34lT00L").gsub("tOtAllYn0t4R34lT00L","")
+    not_found = shell.blocking_raw_input("which tOtAllYn0t4R34lT00L").gsub("tOtAllYn0t4R34lT00L","")
     tools.each do |tool|
-      output = shell.raw_input("which #{tool}").gsub("#{tool}","")
+      output = shell.blocking_raw_input("which #{tool}").gsub("#{tool}","")
       pp.print_success("#{tool} is available\n") unless output == not_found
     end
   end

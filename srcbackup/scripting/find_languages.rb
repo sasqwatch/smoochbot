@@ -46,10 +46,10 @@ class FindLanguages < CoreScript
     #replace with session ID later
     #if this exists god help you.
     #maybe do redirect of stderr
-    not_found = shell.blocking_raw_input("which tOtAllYn0t4R34lCMD").gsub("tOtAllYn0t4R34lCMD","")
+    not_found = shell.raw_input("which tOtAllYn0t4R34lCMD").gsub("tOtAllYn0t4R34lCMD","")
     languages.each do |language|
       #even if in root dir, will still have / in name
-      output = shell.blocking_raw_input("which #{language}").gsub("#{language}","")
+      output = shell.raw_input("which #{language}").gsub("#{language}","")
       pp.print_success("#{language.capitalize} is available\n") unless output == not_found
     end
   end

@@ -2,13 +2,17 @@
 
 require 'readline'
 require 'io/console'
-require_relative "prettyprint"
-require_relative "shellprocess"
+require_relative "lib/prettyprint"
+require_relative "lib/shellprocess"
 require_relative "scripting/initializescripts"
 
 #TODO need to take care of a shell that recieves no error
 #and has no echo
 
+#puts "h​i\bh"
+#puts "h​\x00i\bh"
+#puts  "​"
+#p  "​"
 pp = PrettyPrint.new
 
 #startup scripts to run on 
@@ -28,7 +32,7 @@ remote_shell = ShellProcess.new("nc -l 4445", pp)
 #wait for connection
 remote_shell.verify_connection
 #identify prompt
-remote_shell.identify_shell_prompt
+remote_shell.suppress_shell_prompt
 #run startup scripts
 startup_scripts.each do |script|
   script.run_script(remote_shell, pp)
@@ -44,12 +48,12 @@ Readline.completion_proc = proc do |s|
   end
 end
 
-while input = Readline.readline("$ ", true)
+while input = Readline.readline("sb \b\b\b", true)
   #Remove blank lines from history
   Readline::HISTORY.pop       if input == ""
   case input
-  when "exit"
-    break
+  #when "exit"
+  #  break
   when "hist"
     Readline::HISTORY.pop
     puts Readline::HISTORY.to_a
@@ -63,7 +67,7 @@ while input = Readline.readline("$ ", true)
         script.run_script(remote_shell, pp, rest_of_line) 
       end
     end
-    remote_shell.input(input)   unless input.chomp == "" || ran_script
+    remote_shell.input(input)   unless ran_script
   end
 end
 

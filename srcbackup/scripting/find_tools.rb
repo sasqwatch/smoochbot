@@ -1,13 +1,13 @@
 require_relative "corescript.rb"
 
-class FindLanguages < CoreScript
+class FindTools < CoreScript
 
   def initialize
-    keyword = 'fl'
-    description = 'find available programming languages'
+    keyword = 'ft'
+    description = 'find available tools'
     @options = Hash.new
     option_parser = OptionParser.new
-    option_parser.banner = "Usage: fl"
+    option_parser.banner = "Usage: ft"
     option_parser.on_tail("-h", "--help", "Show this message") do
       #nicely formatted help message
       puts option_parser
@@ -29,30 +29,26 @@ class FindLanguages < CoreScript
     #can be run manually anyways and updated through manual 
     #update function
 
-    #shell.raw_input("find / -name perl*")
-    #shell.raw_input("find / -name python*")
-    #shell.raw_input("find / -name gcc*")
-    #shell.raw_input("find / -name cc")
+    #shell.raw_input("find / -name nc")
 
     #common exploit languages, would be happy to add more
     #submit an issue if needed
-    languages = []
-    languages << "perl"
-    languages << "python"
-    languages << "ruby"
-    languages << "gcc"
-    languages << "cc"
+    #TODO add ability to look for flags
+    #example: nc -e
+
+    tools = []
+    tools << "nc"
+    tools << "wget"
+    tools << "fetch"
     #TODO
-    #replace with session ID later
     #if this exists god help you.
-    #maybe do redirect of stderr
-    not_found = shell.blocking_raw_input("which tOtAllYn0t4R34lCMD").gsub("tOtAllYn0t4R34lCMD","")
-    languages.each do |language|
-      #even if in root dir, will still have / in name
-      output = shell.blocking_raw_input("which #{language}").gsub("#{language}","")
-      pp.print_success("#{language.capitalize} is available\n") unless output == not_found
+    #replace with session ID later
+    not_found = shell.raw_input("which tOtAllYn0t4R34lT00L").gsub("tOtAllYn0t4R34lT00L","")
+    tools.each do |tool|
+      output = shell.raw_input("which #{tool}").gsub("#{tool}","")
+      pp.print_success("#{tool} is available\n") unless output == not_found
     end
   end
-#FindLanguages
+#FindTools
 end
 
