@@ -47,7 +47,7 @@ class ShellProcess
     @stdin.puts "echo #{@session_id}"
     output = ""
     t = @pp.print_time_thread("Waiting for shell...")
-    while output.scan(/#{@session_id}/).length != 1 do
+    while output.gsub("\r", "").scan(/#{@session_id}/).length != 1 do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
@@ -64,15 +64,16 @@ class ShellProcess
     @stdin.puts "export PS1=\"sb \""
     @log_file.puts "export PS1=\"sb \""
     @pp.print_info("Prompt replaced with sb\n")
-
     #expects error to be spit out when command isn't found
     @stdin.puts ""
     output = ""
     @stdin.puts "echo #{@session_id}"
-    while output.scan(@session_id).length != 1 do
+    while output.gsub("\r", "").scan(@session_id).length != 1 do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
+        p output
+        p output.gsub("\r", "").scan(@session_id).length
       end
     end
     @log_file.puts "Identify shell prompt: #{output}"
@@ -103,8 +104,9 @@ class ShellProcess
     #this while loop is waiting for the echos to resolve, and then
     #waits for the prompt to come in so it can chomp it
     #split this into two loops
-    while output.scan(@session_id).length != 2 || 
-          (!@prompt.nil? && output.scan(@prompt).length != 3) do
+    while output.gsub("\r", "").scan(@session_id).length != 2 || 
+          (!@prompt.nil? && 
+             output.gsub("\r", "").scan(@prompt).length != 3) do
       readable = select(@outputs)[0]
       readable.each do |stdio|
         new_output = stdio.read_nonblock(2**24) 
