@@ -30,8 +30,8 @@ pp.print_info("Loaded #{shell_scripts.length} shell scripts\n") if shell_scripts
 #this needs to be passed as an arg, for now hardcoded
 #temporary switch to develop on kali and mac
 mac = `uname`.include? "Darwin"
-remote_shell = ShellProcess.new("nc -lp 4445", pp) unless mac
-remote_shell = ShellProcess.new("nc -l 4445", pp) if mac
+remote_shell = ShellProcess.new("nc -lp 4445", pp, mac) unless mac
+remote_shell = ShellProcess.new("nc -l 4445", pp, mac) if mac
 #wait for connection
 remote_shell.verify_connection
 #identify prompt
