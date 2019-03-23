@@ -14,35 +14,38 @@ class ShellProcess
     @pp.print_success("Received a connection\n")
     #TODO generate real session id
     @session_id = "012345"
-    path = ""
-    path += "/usr/local/bin"
-    path += ":"
-    path += "/usr/bin"
-    path += ":"
-    path += "/bin"
-    path += ":"
-    path += "/usr/sbin"
-    path += ":"
-    path += "/sbin"
-    path += ":"
-    path += "/opt/local/bin"
-    @socket.puts "export PATH=$PATH:#{path}; exec bash"
-    @pp.print_info("Adding common PATHs and execing into bash for formatting\n")
-    #@socket.puts "python -c \'import pty; pty.spawn(\"\/bin\/sh\")\'"
+    #assume here that bash is in your path
+    @socket.puts " exec bash"
+    #possible latency issues here? should buffer, needs testing
     @socket.puts "echo #{@session_id}"
     output = ""
     while output.gsub("\r", "").scan(@session_id).length != 1 do
       readable = select([@socket])[0]
       readable.each do |stdio|
-        output += stdio.read_nonblock(2**24)
+          output += stdio.read_nonblock(2**24)
       end
     end
-    @pp.print_success("Shell could echo session id\n")  
+    #puts output
     #shell is in very "fragile" state right now
     #no prompt, can't change it. need to hop into 
     #python shell right away    
+    @pp.print_success("Execed into bash temporarily\n")
+    #python -c 'import pty; pty.spawn("/bin/sh")'
+    @socket.puts "python -c \'import pty; pty.spawn(\"\/bin\/bash\")\'"
+    @socket.puts "stty raw -echo && echo #{@session_id}"
+    output = ""
+    while output.gsub("\r", "").scan(@session_id).length != 3 do
+      readable = select([@socket])[0]
+      readable.each do |stdio|
+        output += stdio.read_nonblock(2**24)
+        #puts "================"
+        #puts output
+        #puts output.gsub("\r", "").scan(@session_id).length
+      end
+    end
+    #puts output
 
-
+    @pp.print_success("Successfully moved to a python pty\n")
     @prompt = ""
     @log_file = File.open("./.shell_logs", "w")
     @log_file.sync = true
@@ -64,7 +67,6 @@ class ShellProcess
   def suppress_shell_prompt
     @socket.puts "export PS1=\"sb \""
     @log_file.puts "export PS1=\"sb \""
-    @pp.print_info("Prompt replaced with \"sb \"\n")
     #expects error to be spit out when command isn't found
     @socket.puts ""
     output = ""
@@ -83,6 +85,7 @@ class ShellProcess
     if !@prompt.nil? then 
       @prompt = nil unless @prompt == error_line[0..@prompt.length-1]
     end
+    @pp.print_success("Prompt replaced with \"sb \"\n")
   end
 
   def input(input)

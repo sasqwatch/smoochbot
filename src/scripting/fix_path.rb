@@ -36,7 +36,7 @@ class FixPath < CoreScript
     #shouldn't mess with anything, at worse adds a dir
     #that aready exists in path or one that doesn't exist
     shell.blocking_raw_input("export PATH=$PATH:#{path}")
-    pp.print_info("Added common directories to $PATH\n")
+    pp.print_success("Added common directories to $PATH\n")
   end
 #FixPath
 end

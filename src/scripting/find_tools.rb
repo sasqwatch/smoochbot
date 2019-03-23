@@ -45,7 +45,7 @@ class FindTools < CoreScript
     not_found = shell.blocking_raw_input("which tOtAllYn0t4R34lT00L").gsub("tOtAllYn0t4R34lT00L","")
     tools.each do |tool|
       output = shell.blocking_raw_input("which #{tool}").gsub("#{tool}","")
-      pp.print_success("#{tool} is available\n") unless output == not_found
+      pp.print_info("#{tool} is available\n") unless output == not_found
     end
   end
 #FindTools

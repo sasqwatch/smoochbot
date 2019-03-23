@@ -50,7 +50,7 @@ class FindLanguages < CoreScript
     languages.each do |language|
       #even if in root dir, will still have / in name
       output = shell.blocking_raw_input("which #{language}").gsub("#{language}","")
-      pp.print_success("#{language.capitalize} is available\n") unless output == not_found
+      pp.print_info("#{language.capitalize} is available\n") unless output == not_found
     end
   end
 #FindLanguages

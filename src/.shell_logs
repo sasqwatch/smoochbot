@@ -1,71 +1,87 @@
 export PS1="sb "
-Identify shell prompt: 012345
+Identify shell prompt: sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which tOtAllYn0t4R34lCMD
 echo "012345": 012345
-012345
+sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/local/bin
 echo "012345": 012345
-012345
+sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which tOtAllYn0t4R34lCMD
 echo "012345": 012345
-012345
+sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which tOtAllYn0t4R34lCMD
 echo "012345": 012345
-012345
+sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which perl
 echo "012345": 012345
-/usr/bin/perl
-012345
+sb /usr/bin/perl
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which python
 echo "012345": 012345
-/usr/bin/python
-012345
+sb /usr/bin/python
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which ruby
 echo "012345": 012345
-/usr/bin/ruby
-012345
+sb /usr/bin/ruby
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which gcc
 echo "012345": 012345
-/usr/bin/gcc
-012345
+sb /usr/bin/gcc
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which cc
 echo "012345": 012345
-/usr/bin/cc
-012345
+sb /usr/bin/cc
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which tOtAllYn0t4R34lCMD
 echo "012345": 012345
-012345
+sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which which
 echo "012345": 012345
-/usr/bin/which
-012345
+sb /usr/bin/which
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which tOtAllYn0t4R34lT00L
 echo "012345": 012345
-012345
+sb sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which nc
 echo "012345": 012345
-/usr/bin/nc
-012345
+sb /usr/bin/nc
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which wget
 echo "012345": 012345
-/usr/local/bin/wget
-012345
+sb /usr/local/bin/wget
+sb 012345
+sb 
 RAW_INPUT: echo "012345"
 which fetch
 echo "012345": 012345
-012345
-INPUT: ls: 
+sb sb 012345
+sb 
+INPUT: ls: INPUT: whoami: 
