@@ -12,7 +12,23 @@ class ShellProcess
     t.kill
     puts ""
     @pp.print_success("Received a connection\n")
+    #TODO generate real session id
     @session_id = "012345"
+    path = ""
+    path += "/usr/local/bin"
+    path += ":"
+    path += "/usr/bin"
+    path += ":"
+    path += "/bin"
+    path += ":"
+    path += "/usr/sbin"
+    path += ":"
+    path += "/sbin"
+    path += ":"
+    path += "/opt/local/bin"
+    @socket.puts "export PATH=$PATH:#{path}; exec bash"
+    @pp.print_info("Adding common PATHs and execing into bash for formatting\n")
+    #@socket.puts "python -c \'import pty; pty.spawn(\"\/bin\/sh\")\'"
     @socket.puts "echo #{@session_id}"
     output = ""
     while output.gsub("\r", "").scan(@session_id).length != 1 do
@@ -21,8 +37,12 @@ class ShellProcess
         output += stdio.read_nonblock(2**24)
       end
     end
-    @pp.print_success("Shell could echo session id!\n")    
-    #TODO generate real session id
+    @pp.print_success("Shell could echo session id\n")  
+    #shell is in very "fragile" state right now
+    #no prompt, can't change it. need to hop into 
+    #python shell right away    
+
+
     @prompt = ""
     @log_file = File.open("./.shell_logs", "w")
     @log_file.sync = true
@@ -121,7 +141,7 @@ class ShellProcess
     #p output
     #p @prompt
     @log_file.puts "#{output}"
-    output.gsub!(@prompt,"")
+    output.gsub!(@prompt,"") unless @prompt.nil?
     output.gsub!("#{@session_id}\n","")
     output
   end
