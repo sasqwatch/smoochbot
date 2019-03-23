@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+puts "\e]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash\a\e[01;31mroot@kali\e[00m:\e[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash\e[00m# echo 012345\r\n012345\r\n\e]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash\a\e[01;31mroot@kali\e[00m:\e[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash\e[00m# stty raw -echo\r\n\e]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash\a\e[01;31mroot@kali\e[00m:\e[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash\e[00m# "
+puts ""
+puts "echo 012345\r\nstty raw -echo\r\n\e]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash\a\e[01;31mroot@kali\e[00m:\e[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash\e[00m# echo 012345\r\n012345\r\n\e]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash\a\e[01;31mroot@kali\e[00m:\e[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash\e[00m# stty raw -echo\r\n\e]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash\a\e[01;31mroot@kali\e[00m:\e[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash\e[00m# "

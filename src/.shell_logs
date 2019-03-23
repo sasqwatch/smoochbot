@@ -1,5 +1,5 @@
 export PS1="sb "
-Identify shell prompt: sb sb 012345
+Identify shell prompt: ]0;root@kali: ~/Desktop/sb/src/testing-resources/rev-shell-bash[01;31mroot@kali[00m:[01;34m~/Desktop/sb/src/testing-resources/rev-shell-bash[00m# sb sb 012345
 sb 
 RAW_INPUT: echo "012345"
 which tOtAllYn0t4R34lCMD
@@ -76,7 +76,7 @@ sb
 RAW_INPUT: echo "012345"
 which wget
 echo "012345": 012345
-sb /usr/local/bin/wget
+sb /usr/bin/wget
 sb 012345
 sb 
 RAW_INPUT: echo "012345"
@@ -84,4 +84,3 @@ which fetch
 echo "012345": 012345
 sb sb 012345
 sb 
-INPUT: ls: INPUT: whoami: 

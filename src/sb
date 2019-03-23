@@ -47,8 +47,8 @@ Readline.completion_proc = proc do |s|
     Readline::HISTORY.grep(/^#{Regexp.escape(s)}/)
   end
 end
-
-while input = Readline.readline("sb \b\b\b", true)
+print "sb "
+while input = Readline.readline(" \b", true)
   #Remove blank lines from history
   Readline::HISTORY.pop       if input == ""
   case input
