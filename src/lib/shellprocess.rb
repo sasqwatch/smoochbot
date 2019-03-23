@@ -4,22 +4,32 @@ class ShellProcess
 
   attr_reader :outputs, :stdout, :stderr
 
-  def initialize(process_start_string, pretty_print, start_dir = Dir.pwd)
-    @stdin, @stdout, @stderr, @wait_thr = Open3.popen3(process_start_string,
-                                                       :chdir=>start_dir
-                                                      )
-    @pid = @wait_thr.pid
-    @outputs = [@stdout, @stderr]
-    #TODO generate real session id
-    @session_id = "012345"
+  def initialize(port, pretty_print)
     @pp = pretty_print
+    server = TCPServer.new port
+    t = @pp.print_time_thread("Waiting for shell...")
+    @socket = server.accept
+    t.kill
+    puts ""
+    @pp.print_success("Received a connection\n")
+    @session_id = "012345"
+    @socket.puts "echo #{@session_id}"
+    output = ""
+    while output.gsub("\r", "").scan(@session_id).length != 1 do
+      readable = select([@socket])[0]
+      readable.each do |stdio|
+        output += stdio.read_nonblock(2**24)
+      end
+    end
+    @pp.print_success("Shell could echo session id!\n")    
+    #TODO generate real session id
     @prompt = ""
     @log_file = File.open("./.shell_logs", "w")
     @log_file.sync = true
     @blocking = true
     @output_thread = Thread.new {
       while true do
-        readable = select(@outputs)[0]
+        readable = select([@socket])[0]
         readable.each do |stdio|
           print stdio.read_nonblock(2**24).gsub("\n","\r\n") unless @blocking
         end
@@ -28,52 +38,23 @@ class ShellProcess
   end
 
   def close
-    @stdin.close
-    @stdout.close
-    @stderr.close
-    @wait_thr.value  # Process::Status object returned.
-  end
-
-  def listeners
-    [@stdout, @stderr]
-  end
-
-  def listeners
-    [@stdout, @stderr]
-  end
-
-  def verify_connection
-    #expects error to be spit out when command isn't found
-    @stdin.puts "echo #{@session_id}"
-    output = ""
-    t = @pp.print_time_thread("Waiting for shell...")
-    while output.gsub("\r", "").scan(/#{@session_id}/).length != 1 do
-      readable = select(@outputs)[0]
-      readable.each do |stdio|
-        output += stdio.read_nonblock(2**24)
-      end
-    end
-    #first command should be nonexistant session id
-    #shell is listening
-    t.kill
-    puts ""
-    @pp.print_success("Received a connection\n")
+    @socket.close
   end
 
   def suppress_shell_prompt
-    @stdin.puts "export PS1=\"sb \""
+    @socket.puts "export PS1=\"sb \""
     @log_file.puts "export PS1=\"sb \""
-    @pp.print_info("Prompt replaced with sb\n")
+    @pp.print_info("Prompt replaced with \"sb \"\n")
     #expects error to be spit out when command isn't found
-    @stdin.puts ""
+    @socket.puts ""
     output = ""
-    @stdin.puts "echo #{@session_id}"
+    @socket.puts "echo #{@session_id}"
     while output.gsub("\r", "").scan(@session_id).length != 1 do
-      readable = select(@outputs)[0]
+      readable = select([@socket])[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
-        p output
-        p output.gsub("\r", "").scan(@session_id).length
+        #p output
+        #p output.gsub("\r", "").scan(@session_id).length
       end
     end
     @log_file.puts "Identify shell prompt: #{output}"
@@ -90,7 +71,7 @@ class ShellProcess
     #input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
     @blocking = false
     @log_file.print "INPUT: #{input}: "
-    @stdin.puts input
+    @socket.puts input
   end
 
   def blocking_input(input)
@@ -99,7 +80,7 @@ class ShellProcess
     #echo hi; echo middle &; echo hi; fg 2>/dev/null; echo hi;
     input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
     @log_file.print "INPUT: #{input}: "
-    @stdin.puts input
+    @socket.puts input
     output = ""
     #this while loop is waiting for the echos to resolve, and then
     #waits for the prompt to come in so it can chomp it
@@ -107,7 +88,7 @@ class ShellProcess
     while output.gsub("\r", "").scan(@session_id).length != 2 || 
           (!@prompt.nil? && 
              output.gsub("\r", "").scan(@prompt).length != 3) do
-      readable = select(@outputs)[0]
+      readable = select([@socket])[0]
       readable.each do |stdio|
         new_output = stdio.read_nonblock(2**24) 
         output += new_output
@@ -115,8 +96,7 @@ class ShellProcess
         new_output.gsub!("#{@session_id}\n","") unless new_output.nil?
         new_output.gsub!("\n","\r\n")           unless new_output.nil?
         new_output.gsub!(@prompt,"")            unless new_output.nil? || @prompt.nil?
-        @pp.print(new_output)                   if stdio == @stdout
-        @pp.print(new_output, :red)             if stdio == @stderr
+        @pp.print(new_output)
       end
       #puts "session id count: #{output.scan(@session_id).length}"
       #p output
@@ -128,15 +108,18 @@ class ShellProcess
     @blocking = true
     input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
     @log_file.print "RAW_INPUT: #{input}: "
-    @stdin.puts input
+    @socket.puts input
     output = ""
     while output.scan(@session_id).length != 2 || 
           (!@prompt.nil? && output.scan(@prompt).length != 3) do
-      readable = select(@outputs)[0]
+      readable = select([@socket])[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
       end
     end
+    #p input
+    #p output
+    #p @prompt
     @log_file.puts "#{output}"
     output.gsub!(@prompt,"")
     output.gsub!("#{@session_id}\n","")

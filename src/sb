@@ -2,6 +2,7 @@
 
 require 'readline'
 require 'io/console'
+require 'socket'
 require_relative "lib/prettyprint"
 require_relative "lib/shellprocess"
 require_relative "scripting/initializescripts"
@@ -29,11 +30,7 @@ pp.print_info("Loaded #{shell_scripts.length} shell scripts\n") if shell_scripts
 #TODO
 #this needs to be passed as an arg, for now hardcoded
 #temporary switch to develop on kali and mac
-mac = `uname`.include? "Darwin"
-remote_shell = ShellProcess.new("nc -lp 4445", pp) unless mac
-remote_shell = ShellProcess.new("nc -l 4445", pp) if mac
-#wait for connection
-remote_shell.verify_connection
+remote_shell = ShellProcess.new(4445, pp)
 #identify prompt
 remote_shell.suppress_shell_prompt
 #run startup scripts
@@ -81,6 +78,9 @@ end
 #to expand/fix smoochbot
 #all scripts that use commands outside of this search for them before 
 #beginning, and abort with appropriate error messages if they can't run
+#IMPORTANT TODO - as of now, I also use the command which
+#This isn't guaranteed to be available, so a standalone bash script
+#To do the job MUST be implemented for the above assumptions to hold
 ##########################################################################
 #bash  defines  the  following built-in commands: :, ., [, alias, bg, bind,
 #break, builtin, case, cd, command, compgen, complete, continue, declare, 

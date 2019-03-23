@@ -84,4 +84,4 @@ which fetch
 echo "012345": 012345
 sb sb 012345
 sb 
-INPUT: ls: INPUT: whoami: 
+INPUT: ls: INPUT: whoami: INPUT: 23: 
