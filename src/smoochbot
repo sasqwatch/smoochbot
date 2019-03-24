@@ -7,6 +7,9 @@ require_relative "lib/prettyprint"
 require_relative "lib/shellprocess"
 require_relative "scripting/initializescripts"
 
+puts "Usage: smoochbot PORT" if ARGV.size != 1 
+exit                         if ARGV.size != 1 
+
 pp = PrettyPrint.new
 
 #banner
