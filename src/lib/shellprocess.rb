@@ -32,18 +32,23 @@ class ShellProcess
     #no prompt, can't change it. need to hop into 
     #python shell right away    
     @pp.print_success("Execed into bash temporarily\n")
-    #python -c 'import pty; pty.spawn("/bin/sh")'
+    #python -c 'import pty; pty.spawn("/bin/bash")'
     @socket.puts "python -c \'import pty; pty.spawn(\"\/bin\/bash\")\'"
-    @socket.puts "stty raw -echo"
-    @socket.puts "echo #{@session_id}"
+    @socket.puts "export SBSESSIONID=\"#{@session_id}\"; echo $SBSESSIONID"
     output = ""
-    while output.gsub("\r", "").scan(@session_id).length != 2 do
+    while output.gsub("\r", "").scan(@session_id).length != 3 do
       readable = select([@socket])[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
-        #puts "================================"
-        #p output
-        #p output.gsub("\r", "").scan(@session_id).length
+      end
+    end
+    #puts output
+    @socket.puts "stty raw -echo; echo $SBSESSIONID"
+    output = ""
+    while output.gsub("\r", "").scan(@session_id).length != 1 do
+      readable = select([@socket])[0]
+      readable.each do |stdio|
+        output += stdio.read_nonblock(2**24)
       end
     end
     #puts output
@@ -67,25 +72,20 @@ class ShellProcess
   end
 
   def suppress_shell_prompt
-    @socket.puts "export PS1=\"sb \""
-    @log_file.puts "export PS1=\"sb \""
-    #expects error to be spit out when command isn't found
-    @socket.puts ""
+    #assumes there will be no echo of input but prompt could be anything
+    #export PS1="sb "
+    @socket.puts "export PS1=\"sb \"; echo #{@session_id}"
+    @log_file.puts "export PS1=\"sb \"; echo #{@session_id}"
     output = ""
-    @socket.puts "echo #{@session_id}"
-    while output.gsub("\r", "").scan(@session_id).length != 1 do
+    @prompt = "sb "
+    while output.gsub("\r", "").scan(@session_id).length != 1 || 
+          output.gsub("\r", "").scan(@prompt).length != 1 do
       readable = select([@socket])[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
         #p output
         #p output.gsub("\r", "").scan(@session_id).length
       end
-    end
-    @log_file.puts "Identify shell prompt: #{output}"
-    #confirm prompt
-    error_line, @prompt = output.split("\n")
-    if !@prompt.nil? then 
-      @prompt = nil unless @prompt == error_line[0..@prompt.length-1]
     end
     @pp.print_success("Prompt replaced with \"sb \"\n")
   end
@@ -103,7 +103,7 @@ class ShellProcess
     @blocking = true
     #TODO explore using this command to wrap
     #echo hi; echo middle &; echo hi; fg 2>/dev/null; echo hi;
-    input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
+    input = "echo \"#{@session_id}\"; " + input + "; echo \"#{@session_id}\""
     @log_file.print "INPUT: #{input}: "
     @socket.puts input
     output = ""
@@ -112,7 +112,7 @@ class ShellProcess
     #split this into two loops
     while output.gsub("\r", "").scan(@session_id).length != 2 || 
           (!@prompt.nil? && 
-             output.gsub("\r", "").scan(@prompt).length != 3) do
+             output.gsub("\r", "").scan(@prompt).length != 1) do
       readable = select([@socket])[0]
       readable.each do |stdio|
         new_output = stdio.read_nonblock(2**24) 
@@ -131,17 +131,20 @@ class ShellProcess
 
   def blocking_raw_input(input)
     @blocking = true
-    input = "echo \"#{@session_id}\"\n" + input + "\necho \"#{@session_id}\""
+    input = "echo \"#{@session_id}\"; " + input + "; echo \"#{@session_id}\""
     @log_file.print "RAW_INPUT: #{input}: "
     @socket.puts input
     output = ""
     while output.scan(@session_id).length != 2 || 
-          (!@prompt.nil? && output.scan(@prompt).length != 3) do
+          (!@prompt.nil? && output.scan(@prompt).length != 1) do
       readable = select([@socket])[0]
       readable.each do |stdio|
         output += stdio.read_nonblock(2**24)
+        #puts "=================="
+        #puts output
       end
     end
+    #p !@prompt.nil? && output.scan(@prompt).length != 3
     #p input
     #p output
     #p @prompt

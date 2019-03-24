@@ -7,15 +7,15 @@ require_relative "lib/prettyprint"
 require_relative "lib/shellprocess"
 require_relative "scripting/initializescripts"
 
-#TODO need to take care of a shell that recieves no error
-#and has no echo
-
-#puts "h​i\bh"
-#puts "h​\x00i\bh"
-#puts  "​"
-#p  "​"
 pp = PrettyPrint.new
 
+#banner
+kiss_prompt  = pp.color("K", :pink) + "eep"   +   pp.color("              .. ..\n", :pink)
+kiss_prompt += pp.color("I", :pink) + "t"     + pp.color("              .'  `  `.\n", :pink)
+kiss_prompt += pp.color("S", :pink) + "imple" +     pp.color("        .'_.-...-._`.\n", :pink)
+kiss_prompt += pp.color("S", :pink) + "tupid" +     pp.color("         `.       .'\n", :pink)
+kiss_prompt += pp.color("smoochbot", :pink)   +        pp.color("        `-...-'", :pink)
+puts kiss_prompt
 #startup scripts to run on 
 startup_scripts = create_startup_scripts
 pp.print_info("Loaded #{startup_scripts.length} startup scripts\n") if startup_scripts.length > 1
@@ -26,11 +26,36 @@ shell_scripts = create_shell_scripts
 pp.print_info("Loaded #{shell_scripts.length} shell scripts\n") if shell_scripts.length > 1
 pp.print_info("Loaded #{shell_scripts.length} shell scripts\n") if shell_scripts.length == 1
 pp.print_info("Loaded #{shell_scripts.length} shell scripts\n") if shell_scripts.length == 0
+
+#load history
+=begin
+hist_file = nil
+filename = __dir__ + "/.smoochbot_history"
+if File.exist?(filename) then
+  #open history file, load into buffer
+  File.open(filename).each_line do |line|
+    #p Readline::HISTORY
+    #p Readline::HISTORY.methods
+
+    Readline::HISTORY.push "fileload"
+    print "added cmd: "
+    p line.chomp
+  end
+  hist_file = File.open(filename, "a")
+else
+  #create history file
+  hist_file = File.open(filename, "a")
+  pp.puts(
+           "History file created at #{filename}",
+           :yellow
+          )
+end
+hist_file.sync = true
+=end
+
 #initialize shell
-#TODO
-#this needs to be passed as an arg, for now hardcoded
-#temporary switch to develop on kali and mac
-remote_shell = ShellProcess.new(4445, pp)
+port = ARGV[0].to_i
+remote_shell = ShellProcess.new(port, pp)
 #identify prompt
 remote_shell.suppress_shell_prompt
 #run startup scripts
@@ -38,6 +63,7 @@ startup_scripts.each do |script|
   script.run_script(remote_shell, pp)
 end
 
+=begin
 #tab complete
 Readline.completion_proc = proc do |s|
   directory_list = Dir.glob("#{s}*")
@@ -47,16 +73,20 @@ Readline.completion_proc = proc do |s|
     Readline::HISTORY.grep(/^#{Regexp.escape(s)}/)
   end
 end
+=end
+
 print "sb "
+#bug with readline workaround
 while input = Readline.readline(" \b", true)
   #Remove blank lines from history
   Readline::HISTORY.pop       if input == ""
   case input
-  #when "exit"
-  #  break
+  #when "\\exit"
+    #remote_shell.close
   when "hist"
     Readline::HISTORY.pop
     puts Readline::HISTORY.to_a
+    print "sb "
   else
     #check for script keywords
     ran_script = false
@@ -64,10 +94,12 @@ while input = Readline.readline(" \b", true)
     shell_scripts.each do |script|
       if first_word == script.keyword then
         ran_script = true
-        script.run_script(remote_shell, pp, rest_of_line) 
+        script.run_script(remote_shell, pp, rest_of_line)
+        print "sb "
       end
     end
     remote_shell.input(input)   unless ran_script
+    #hist_file.puts input
   end
 end
 
@@ -90,6 +122,3 @@ end
 #source, suspend,  test,  times,  trap,  type, typeset, ulimit, umask, 
 #unalias, unset, until, wait, while
 ##########################################################################
-
-
-

@@ -39,12 +39,17 @@ class FindTools < CoreScript
     tools << "nc"
     tools << "wget"
     tools << "fetch"
+    tools << "netcat"
+    tools << "tftp"
+    tools << "ftp"
     #TODO
     #if this exists god help you.
     #replace with session ID later
-    not_found = shell.blocking_raw_input("which tOtAllYn0t4R34lT00L").gsub("tOtAllYn0t4R34lT00L","")
+    tmp = shell.blocking_raw_input("which tOtAllYn0t4R34lT00L")
+    not_found = tmp.gsub("tOtAllYn0t4R34lT00L","")
     tools.each do |tool|
-      output = shell.blocking_raw_input("which #{tool}").gsub("#{tool}","")
+      tmp2 = shell.blocking_raw_input("which #{tool}")
+      output = tmp2.gsub("#{tool}","")
       pp.print_info("#{tool} is available\n") unless output == not_found
     end
   end

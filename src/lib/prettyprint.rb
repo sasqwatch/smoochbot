@@ -59,6 +59,13 @@ class PrettyPrint
     $stdout.print pre + string + @Colors[:default]
   end
 
+  def print_esc(string)
+    pre = @Colors[:pink]
+    pre += "[#] " 
+    pre += @Colors[:default]
+    $stdout.print pre + string + @Colors[:default]
+  end
+
   def clear_line
     print "\033[2K"
   end
