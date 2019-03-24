@@ -15,7 +15,7 @@ class ShellProcess
     puts ""
     @pp.print_success("Received a connection\n")
     #TODO generate real session id
-    @session_id = "012345"
+    @session_id = "0123458899"
     #assume here that bash is in your path
     @socket.puts " exec bash"
     #possible latency issues here? should buffer, needs testing

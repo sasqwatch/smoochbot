@@ -42,6 +42,7 @@ class FindTools < CoreScript
     tools << "netcat"
     tools << "tftp"
     tools << "ftp"
+    tools << "curl"
     #TODO
     #if this exists god help you.
     #replace with session ID later
