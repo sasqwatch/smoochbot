@@ -1,5 +1,5 @@
 # Smoochbot
-A shell handler/script runner. Supports linux only, also assumes that python and 'stty' are available (I have plans to remove this). Writing your own scripts is highly encouraged, and I'd be happy to add any custom scripts to the repo!
+A shell handler/script runner. Supports linux only (once I'm comfortable with how it functions with linux shells, I'll add support for windows shells), also assumes that python and 'stty' are available (I have plans to remove this). Writing your own scripts is highly encouraged, and I'd be happy to add any custom scripts to the repo!
 Lots of features planned, such as 
 Persistent history
 Tab completion
