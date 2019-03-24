@@ -6,7 +6,7 @@ Tab completion
 And many more scripts!
 I'm stepping away from the project to focus on school for about 2 months, I'll start adding/improving features after that. 
 ### Usage
-There are 5 scripts currently written for smoochbot, their names and invocations are as follows
+There are 5 scripts currently written for smoochbot, their names and invocations are as follows. All 5 can be invoked with their keywords. FixPath, FindLanguages, and FindTools are run as soon a shell connection is received.
 ##### FindWriteableDirs - fwd
 Searches for all directories writeable by the current user
 ##### FixPath - fp
